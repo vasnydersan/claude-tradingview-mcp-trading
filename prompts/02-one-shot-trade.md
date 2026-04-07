@@ -56,6 +56,24 @@ Show your reasoning for each condition.
 
 ---
 
+## STEP 4b — Check trade limits
+
+Before evaluating the market, check today's trading limits from `.env` and `safety-check-log.json`:
+
+1. Count how many trades have `orderPlaced: true` in today's log entries (match date in `timestamp` field)
+2. Compare against `MAX_TRADES_PER_DAY` from `.env`
+3. Calculate the proposed trade size: 1% of `PORTFOLIO_VALUE_USD`, capped at `MAX_TRADE_SIZE_USD`
+
+Print a limits summary:
+```
+Trades today: X / MAX_TRADES_PER_DAY
+Proposed trade size: $X.XX (max allowed: $MAX_TRADE_SIZE_USD)
+```
+
+If the daily trade limit is already hit — stop here. Print: `🚫 TRADE LIMIT REACHED — X trades placed today. Come back tomorrow.`
+
+---
+
 ## STEP 5 — Run the safety check
 
 Based on the bias determined in Step 4, evaluate the appropriate entry_rules from rules.json.

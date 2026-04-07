@@ -31,6 +31,7 @@ Here's what it does when you run it:
 | 2 | Pulls live price + indicator data from TradingView |
 | 3 | Calculates MACD from raw candle data |
 | 4 | Evaluates market bias (bullish / bearish / neutral) |
+| 4b | Checks trade limits — daily cap and max trade size |
 | 5 | Runs the safety check — every entry condition checked |
 | 6 | Executes the trade via BitGet if all conditions pass |
 | 7 | Saves a log of every decision made |
@@ -107,6 +108,53 @@ Your chart should be on BTCUSDT (or whatever you're trading), 4H timeframe, with
 Open Claude Code in the project directory and paste the full contents of [`prompts/02-one-shot-trade.md`](prompts/02-one-shot-trade.md).
 
 That's it.
+
+---
+
+## Deploy to Railway (Run in the Cloud 24/7)
+
+The local setup runs when your laptop is open. Railway lets the bot check for setups around the clock — even while you sleep.
+
+> **Note:** Cloud mode pulls candle data directly from Binance's free market API instead of TradingView. No TradingView Desktop needed in the cloud. The strategy logic and safety check are identical.
+
+### 1. Deploy
+
+```bash
+npm install -g @railway/cli
+railway login
+railway init
+railway up
+```
+
+### 2. Set your environment variables in Railway
+
+Go to your Railway project → Variables and add everything from `.env.example`:
+
+| Variable | Example |
+|----------|---------|
+| `BITGET_API_KEY` | your key |
+| `BITGET_SECRET_KEY` | your secret |
+| `BITGET_PASSPHRASE` | your passphrase |
+| `PORTFOLIO_VALUE_USD` | 1000 |
+| `MAX_TRADE_SIZE_USD` | 100 |
+| `MAX_TRADES_PER_DAY` | 3 |
+| `PAPER_TRADING` | true (set to false when ready) |
+| `SYMBOL` | BTCUSDT |
+| `TIMEFRAME` | 4H |
+
+### 3. Set a cron schedule
+
+In Railway → Settings → Cron Schedule, set how often the bot runs. Recommended:
+
+| Timeframe | Schedule | What it means |
+|-----------|----------|----------------|
+| 4H chart | `0 */4 * * *` | Every 4 hours |
+| 1D chart | `0 9 * * *` | Once a day at 9am UTC |
+| 1H chart | `0 * * * *` | Every hour |
+
+### 4. Start in paper trading mode
+
+`PAPER_TRADING=true` logs every decision but never places real orders. Watch a few days of paper trades, confirm the logic matches what you expect, then flip it to `false`.
 
 ---
 
