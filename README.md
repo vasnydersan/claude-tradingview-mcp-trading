@@ -1,9 +1,10 @@
 # Claude + TradingView MCP — Automated Trading
 
-Connect Claude Code to TradingView and BitGet to execute trades automatically.
-Built as a follow-up to the "How To Connect Claude to TradingView (Insanely Cool)" video.
+> **New to this?** Watch the previous video first — it sets up the TradingView MCP connection this builds on.
 
-**Requires:** The TradingView MCP from the first video already set up and connected.
+[![How To Connect Claude to TradingView (Insanely Cool)](https://img.youtube.com/vi/vIX6ztULs4U/maxresdefault.jpg)](https://youtu.be/vIX6ztULs4U)
+
+> **This video** — coming soon. Subscribe to be notified.
 
 ---
 
@@ -11,71 +12,111 @@ Built as a follow-up to the "How To Connect Claude to TradingView (Insanely Cool
 
 1. Reads your trading strategy from `rules.json`
 2. Pulls live indicator data from your TradingView chart via MCP
-3. Calculates MACD from raw price data (works on free TradingView accounts)
-4. Runs a safety check — all conditions from your strategy must pass
-5. Executes a trade via BitGet API only if every condition is met
-6. Logs every decision to `safety-check-log.json`
+3. Calculates MACD from raw price data (works on the **free TradingView plan**)
+4. Runs a safety check — every condition in your strategy must pass
+5. Executes a trade via BitGet only if all conditions are met
+6. Logs every decision to `safety-check-log.json` — full audit trail
+
+---
+
+## The One-Shot Prompt
+
+> **This is the thing you paste.** Open Claude Code in this directory, paste the entire contents of [`prompts/02-one-shot-trade.md`](prompts/02-one-shot-trade.md), and Claude will do the rest.
+
+Here's what it does when you run it:
+
+| Step | What Claude does |
+|------|-----------------|
+| 1 | Reads your `rules.json` strategy |
+| 2 | Pulls live price + indicator data from TradingView |
+| 3 | Calculates MACD from raw candle data |
+| 4 | Evaluates market bias (bullish / bearish / neutral) |
+| 5 | Runs the safety check — every entry condition checked |
+| 6 | Executes the trade via BitGet if all conditions pass |
+| 7 | Saves a log of every decision made |
+
+If anything fails the safety check, it stops and tells you exactly which condition failed and the actual values. No trade goes through unless everything lines up.
 
 ---
 
 ## Setup
 
-### 1. Clone this repo
+### Prerequisites
+
+The TradingView MCP from the first video must already be set up. If you haven't done that yet, [watch the first video](https://youtu.be/vIX6ztULs4U) and come back.
+
+---
+
+### Step 1 — Clone this repo
 
 ```bash
 git clone https://github.com/jackson-video-resources/claude-tradingview-mcp-trading
 cd claude-tradingview-mcp-trading
 ```
 
-### 2. Add your BitGet API credentials
+---
 
-Copy `.env.example` to `.env` and fill in your details:
+### Step 2 — Add your BitGet API credentials
+
+Copy `.env.example` to `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-Get your API key from BitGet:
-- Go to API Management in your BitGet account
-- Create a new API key
-- **Withdrawals: OFF** — always
-- **IP whitelist: ON** — add your own IP address
-- Copy the key, secret, and passphrase into your `.env` file
+Open `.env` and fill in:
 
-Add your portfolio value so position sizing works:
 ```
+BITGET_API_KEY=your_api_key_here
+BITGET_SECRET_KEY=your_secret_key_here
+BITGET_PASSPHRASE=your_passphrase_here
 PORTFOLIO_VALUE_USD=1000
 ```
 
-### 3. Make sure TradingView MCP is running
+**Getting your BitGet API key:**
+- Go to your BitGet account → API Management
+- Create a new API key
+- **Withdrawals: OFF** — always, no exceptions
+- **IP whitelist: ON** — add your own IP so the key only works from your machine
+- Copy the key, secret key, and passphrase into your `.env`
 
-From the first video — TradingView Desktop should be open and your MCP connected.
-Check with: `tv_health_check` in Claude Code.
-
-### 4. Set your chart
-
-- Symbol: BTCUSDT (or whatever you're trading)
-- Timeframe: 4H
-- Indicators on chart: your strategy's backtest + RSI 14
-
-### 5. Build your strategy (optional — skip if using the example)
-
-If you want to build your own strategy from trader transcripts:
-1. Scrape transcripts using Apify (link in video description)
-2. Paste the output into `prompts/01-extract-strategy.md`
-3. Run that prompt in Claude Code — it will generate your `rules.json`
+Don't have BitGet? [Sign up here](https://partner.bitget.com/bg/LewisJackson) — $1,000 bonus on your first deposit.
 
 ---
 
-## Run a Trade
+### Step 3 — Launch TradingView and connect the MCP
 
-Open Claude Code in this directory and paste the contents of `prompts/02-one-shot-trade.md`.
+**Mac:**
+```bash
+tv_launch
+tv_health_check
+```
 
-That's it. Claude will:
-- Read your strategy
-- Check every condition live
-- Show you exactly what passed and what failed
-- Execute only if everything lines up
+**Windows:**
+See [Windows setup guide](docs/setup-windows.md) — the path to your TradingView executable is different. Full walkthrough there.
+
+**Linux:**
+See [Linux setup guide](docs/setup-linux.md).
+
+Your chart should be on BTCUSDT (or whatever you're trading), 4H timeframe, with your strategy indicator and RSI 14 visible.
+
+---
+
+### Step 4 — Run the one-shot prompt
+
+Open Claude Code in the project directory and paste the full contents of [`prompts/02-one-shot-trade.md`](prompts/02-one-shot-trade.md).
+
+That's it.
+
+---
+
+## Build Your Own Strategy (Optional)
+
+The example `rules.json` uses the van de Poppe + Tone Vays BTC strategy. To build one from any trader's public videos:
+
+1. Scrape their YouTube transcripts using [Apify](https://apify.com/streamers/youtube-transcript?fpr=3ly3yd) — takes about 30 seconds per channel
+2. Paste the output into `prompts/01-extract-strategy.md`
+3. Run that prompt in Claude Code — it generates a `rules.json` tailored to that trader's methodology
 
 ---
 
@@ -84,26 +125,29 @@ That's it. Claude will:
 | File | What it does |
 |------|-------------|
 | `rules.json` | Your strategy — indicators, entry rules, risk rules |
-| `.env` | Your BitGet credentials (never commit this) |
+| `.env` | Your BitGet credentials (gitignored — never commits) |
 | `prompts/01-extract-strategy.md` | Build rules.json from trader transcripts |
-| `prompts/02-one-shot-trade.md` | The one-shot prompt — run this to trade |
-| `safety-check-log.json` | Auto-generated audit trail of every decision |
+| `prompts/02-one-shot-trade.md` | **The one-shot prompt — paste this to trade** |
+| `safety-check-log.json` | Auto-generated log of every trade decision |
+| `docs/setup-windows.md` | Windows-specific MCP setup |
+| `docs/setup-linux.md` | Linux-specific MCP setup |
 
 ---
 
 ## Safety
 
-- The safety check blocks trades that don't meet every condition
-- Position sizing is calculated from your rules — default max 1-2% risk per trade
-- Stop loss is placed automatically based on your rules
-- All decisions are logged
+- The safety check blocks any trade that doesn't meet every condition
+- Position sizing uses your risk rules — default max 1-2% of portfolio per trade
+- Stop loss is placed automatically at the level defined in your rules
+- Every decision is logged with the exact values that triggered it
 
-**This is not financial advice.** Build your strategy properly. Backtest it. Paper trade before going live.
+**This is not financial advice.** Build your strategy properly. Run the backtest. Paper trade before going live. Never put in more than you can afford to lose.
 
 ---
 
 ## Resources
 
-- [TradingView MCP (first video)](https://github.com/jackson-video-resources/tradingview-mcp-jackson)
-- [Apify transcript scraper](https://apify.com?fpr=3ly3yd)
-- BitGet: link in video description
+- [First video — Connect Claude to TradingView](https://youtu.be/vIX6ztULs4U)
+- [TradingView MCP repo (first video)](https://github.com/jackson-video-resources/tradingview-mcp-jackson)
+- [Apify — YouTube Transcript Scraper](https://apify.com/streamers/youtube-transcript?fpr=3ly3yd)
+- [BitGet — $1,000 bonus on first deposit](https://partner.bitget.com/bg/LewisJackson)
