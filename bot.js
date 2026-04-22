@@ -20,10 +20,16 @@ function checkOnboarding() {
   const required = ["COINBASE_API_KEY", "COINBASE_PRIVATE_KEY"];
   const missing = required.filter((k) => !process.env[k]);
 
+  // Credentials already in environment (Railway) — skip .env file check entirely
+  if (missing.length === 0) {
+    const csvPath = new URL("trades.csv", import.meta.url).pathname;
+    console.log(`\n📄 Trade log: ${csvPath}`);
+    return;
+  }
+
+  // Local dev — help user create their .env
   if (!existsSync(".env")) {
-    console.log(
-      "\n⚠️  No .env file found — opening it for you to fill in...\n",
-    );
+    console.log("\n⚠️  No .env file found — creating one for you...\n");
     writeFileSync(
       ".env",
       [
@@ -40,33 +46,16 @@ function checkOnboarding() {
         "TIMEFRAME=4H",
       ].join("\n") + "\n",
     );
-    try {
-      execSync("open .env");
-    } catch {}
-    console.log(
-      "Fill in your Coinbase Advanced credentials in .env then re-run: node bot.js\n",
-    );
+    try { execSync("open .env"); } catch {}
+    console.log("Fill in your Coinbase Advanced credentials in .env then re-run: node bot.js\n");
     process.exit(0);
   }
 
-  if (missing.length > 0) {
-    console.log(`\n⚠️  Missing credentials in .env: ${missing.join(", ")}`);
-    console.log("Opening .env for you now...\n");
-    try {
-      execSync("open .env");
-    } catch {}
-    console.log("Add the missing values then re-run: node bot.js\n");
-    process.exit(0);
-  }
-
-  const csvPath = new URL("trades.csv", import.meta.url).pathname;
-  console.log(`\n📄 Trade log: ${csvPath}`);
-  console.log(
-    `   Open in Google Sheets or Excel any time — or tell Claude to move it:\n` +
-      `   "Move my trades.csv to ~/Desktop" or "Move it to my Documents folder"\n`,
-  );
+  console.log(`\n⚠️  Missing credentials: ${missing.join(", ")}`);
+  console.log("Add the missing values to your .env then re-run: node bot.js\n");
+  try { execSync("open .env"); } catch {}
+  process.exit(0);
 }
-
 // ─── Config ────────────────────────────────────────────────────────────────
 
 function normalizePrivateKey(key) {
