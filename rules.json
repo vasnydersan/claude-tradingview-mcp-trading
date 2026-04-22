@@ -1,50 +1,111 @@
 {
   "watchlist": ["BTCUSDT"],
-  "default_timeframe": "1m",
+  "default_timeframe": "4H",
 
   "strategy": {
-    "name": "VWAP + RSI(3) + EMA(8) Scalping Strategy",
-    "sources": ["Lewis Jackson"],
-    "description": "Three indicators, each doing a different job. EMA(8) for trend direction, VWAP for session bias, RSI(3) for entry timing. All three must align before a trade fires."
+    "name": "The Trading Parrot — CPR + CME Gap + Open Interest Multi-Timeframe Strategy",
+    "sources": ["The Trading Parrot (@TheTradingParrot) — youtube.com/@TheTradingParrot"],
+    "description": "A data-driven, multi-timeframe Bitcoin strategy combining CPR monthly pivot levels as a leading indicator, CME gap fill probability, aggregated open interest for sentiment, and 4H price structure. Trades are entered in tranches using DCA. Simultaneous long and short hedging is used on larger positions. Limit orders only — never chase price."
   },
 
   "indicators": {
-    "ema_8": "Trend direction. Price above EMA(8) = bullish momentum. Below = bearish.",
-    "vwap": "Session bias. Price above VWAP = buyers in control. Below = sellers. Resets at midnight UTC.",
-    "rsi_3": "Entry timing. RSI on 3 candles only — extremely sensitive. Below 30 in an uptrend = snap-back setup. Above 70 in a downtrend = reversal likely."
+    "cpr_monthly": "Central Pivot Range on monthly timeframe. The single most important leading indicator. Determines monthly bias: price above CPR = bullish month expected, price below = bearish. CPR resistance/support levels are primary exit targets.",
+    "cpr_daily": "Daily CPR levels for intraday support and resistance reference. Used alongside monthly CPR.",
+    "cme_gap": "CME futures gap between Friday close and Sunday open. Gaps have high probability of being filled. Bullish gaps (price above gap) = downside magnet. Bearish gaps (price below gap) = upside magnet. Used as targets and as bias filters.",
+    "aggregated_open_interest": "Total open interest across all exchanges (Binance, Bybit, OKX etc). High OI near $28B+ = too many longs, risk of long squeeze. OI declining sharply = longs being flushed, potential reversal zone. OI at lows (~$17.6B) = exhaustion of sellers.",
+    "longs_vs_shorts_ratio": "Ratio of long vs short positions. Extreme long bias = contrarian bearish signal. Extreme short bias = contrarian bullish signal (short squeeze potential).",
+    "liquidation_levels": "Key price levels where large clusters of liquidations exist. Price frequently sweeps these levels before reversing. Treat as a magnet for price action.",
+    "volume_percentile": "4H volume relative to historical range. Volume hitting top 1-2 percentile at a key level = major signal (exhaustion or breakout confirmation).",
+    "weekly_50_ma": "50-period moving average on the weekly chart. Key long-term support/resistance. Price below 50W MA = macro bearish.",
+    "price_structure": "Higher timeframe pattern recognition: falling wedges, inverse head and shoulders, Adam and Eve patterns, double tops, channels. Used to define directional bias and targets."
   },
 
   "bias_criteria": {
-    "bullish": ["Price is above VWAP", "Price is above EMA(8)"],
-    "bearish": ["Price is below VWAP", "Price is below EMA(8)"]
+    "bullish": [
+      "Price is above the monthly CPR central pivot range",
+      "CME gap exists below current price (gap filled or no bearish gap overhead)",
+      "Aggregated open interest is declining from highs (longs being flushed, bottom forming)",
+      "4H structure shows bullish pattern (inverse H&S, falling wedge breakout, Adam and Eve)",
+      "Price is above the 50 weekly MA",
+      "Longs/shorts ratio shows extreme short bias (short squeeze setup)"
+    ],
+    "bearish": [
+      "Price is below the monthly CPR central pivot range",
+      "CME gap exists above current price (unfilled bullish gap = upside magnet not yet reached, but overall structure bearish)",
+      "Aggregated open interest at elevated levels ($28B+) with longs dominant",
+      "4H structure shows bearish pattern (double top, head and shoulders, bear flag)",
+      "Price is below the 50 weekly MA",
+      "Longs/shorts ratio shows extreme long bias (long squeeze setup)"
+    ],
+    "neutral": [
+      "Price is inside the monthly CPR range (no clear bias)",
+      "Open interest flat with no extreme reading",
+      "No clear pattern on 4H — avoid trading, wait for structure"
+    ]
   },
 
   "entry_rules": {
     "long": [
-      "Price is above VWAP — buyers in control for the session",
-      "Price is above EMA(8) — uptrend confirmed",
-      "RSI(3) has dropped below 30 — short-term pullback in an uptrend, snap-back likely"
+      "Monthly CPR shows bullish bias (price above central pivot range)",
+      "Price has swept a known liquidity level or liquidation cluster to the downside",
+      "A nearby CME gap below has been filled OR there is no open bearish CME gap below",
+      "Aggregated open interest has declined (long flush complete or in progress)",
+      "4H candle shows bullish structure (higher low, breakout of neckline, or bullish divergence)",
+      "Use limit orders placed at the liquidity sweep level — never chase price",
+      "Enter in tranches (DCA): first entry at identified level, subsequent entries lower if available"
     ],
     "short": [
-      "Price is below VWAP — sellers in control",
-      "Price is below EMA(8) — downtrend confirmed",
-      "RSI(3) has spiked above 70 — overbought in a downtrend, reversal likely"
+      "Monthly CPR shows bearish bias (price below central pivot range) OR price rejecting at monthly CPR resistance",
+      "Volume at 4H is hitting top 1-2 percentile at a key resistance level (exhaustion signal)",
+      "Aggregated open interest is elevated ($26B+) with longs dominant",
+      "CME gap above current price has been filled (upside target completed)",
+      "4H candle shows bearish structure (double top rejection, H&S neckline break, bear flag)",
+      "Use limit orders placed at resistance — never chase price",
+      "Enter in tranches (DCA): first entry at resistance, scale in higher if price pushes up further"
     ]
   },
 
   "exit_rules": [
-    "Exit when RSI(3) crosses back above 50 (for longs) or below 50 (for shorts)",
-    "Hard stop: 0.3% below entry for longs, 0.3% above entry for shorts",
-    "Take profit at next VWAP touch or EMA(8) cross"
+    "Primary exit target: next CPR monthly pivot level (resistance for longs, support for shorts)",
+    "Secondary exit target: open CME gap (price tends to fill these — use as take profit zones)",
+    "Move stop to break-even once position is 2-3% in profit",
+    "If price sweeps the liquidity below your entry and reclaims quickly — hold. If it closes below — reassess.",
+    "Do not exit early during normal pullbacks if the monthly CPR bias is still intact",
+    "On extreme volume spike (top percentile) at your target — consider taking full profit"
   ],
 
   "risk_rules": [
-    "Risk maximum 1% of portfolio per trade",
+    "Use DCA — never enter full size at once. Split entries into 2-3 tranches.",
+    "Consider running a hedge (small opposing position) if holding a large directional trade",
+    "Limit orders only — never enter at market price or chase a move",
     "Maximum trade size capped by MAX_TRADE_SIZE_USD in .env",
     "Maximum trades per day capped by MAX_TRADES_PER_DAY in .env",
-    "Do not trade if price is more than 1.5% away from VWAP — overextended",
+    "Risk maximum 1-2% of portfolio per trade tranche",
+    "Do not add to a losing position beyond your planned DCA levels",
+    "If aggregated open interest surges while price stalls — reduce exposure",
+    "Avoid trading when price is deep inside the monthly CPR range — wait for breakout or rejection",
     "Paper trade first — validate this strategy on your specific asset before going live"
   ],
 
-  "notes": "Scalping strategy — designed for 1m to 5m timeframes. RSI(3) is intentionally fast and sensitive. Do not apply to higher timeframes."
+  "data_sources": {
+    "read_method_note": "Signals split into ON_CHART (consume indicator slots, read via data_get_study_values) and DIRECT_FETCH (read via quote_get, no slot used). Free tier = 5 slots per chart.",
+    "on_chart_indicators": {
+      "slot_1_volume": "Volume — already on chart. Bot reads volume via data_get_study_values.",
+      "slot_2_optional": "Universal Divergence Indicator (if accessible) or RSI(14) — for divergence confirmation at CPR levels. Not required for core strategy."
+    },
+    "calculated_without_chart_slot": {
+      "cpr_monthly": "Computed from data_get_ohlcv(monthly): Pivot=(H+L+C)/3, BC=(H+L)/2, TC=(2*Pivot)-BC",
+      "ma_50_week": "Computed from data_get_ohlcv(weekly): average of last 50 weekly closes"
+    },
+    "direct_fetch_no_slot": {
+      "cme_futures": "CME:BTC — quote_get, compare Friday close to Sunday open to detect gaps",
+      "open_interest_perpetual": "IntoTheBlock:BTC_PERPETUALOPENINTEREST — quote_get",
+      "open_interest_futures": "IntoTheBlock:BTC_FUTURESOPENINTEREST — quote_get",
+      "funding_rate": "SGX:BTFR — quote_get. Extreme positive = longs over-leveraged. Extreme negative = shorts at risk.",
+      "longs": "Bitfinex:BTCUSDLONGS — quote_get",
+      "shorts": "Bitfinex:BTCUSDSHORTS — quote_get",
+      "liquidation_proxy": "Derived from funding rate + OI + longs/shorts ratio. Structural clusters at round $10K levels and prior swing highs/lows."
+    }
+  },
+  "notes": "Strategy extracted from 15 videos of The Trading Parrot YouTube channel (@TheTradingParrot). TradingView compatibility: ~85%. CME gaps, open interest, longs/shorts, volume, MAs and price structure are all fully available. CPR is calculated mathematically from OHLCV. Liquidation heatmaps are the only data point not available natively in TradingView. This is a swing/position trading strategy best suited to 4H and Daily timeframes — not for scalping."
 }
