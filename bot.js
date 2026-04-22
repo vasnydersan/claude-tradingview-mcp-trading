@@ -56,36 +56,6 @@ function checkOnboarding() {
   try { execSync("open .env"); } catch {}
   process.exit(0);
 }
-// ─── Config ────────────────────────────────────────────────────────────────
-
-function normalizePrivateKey(key) {
-  if (!key) return key;
-  return key.replace(/\\n/g, "\n");
-}
-
-function toCoinbaseProductId(symbol) {
-  return symbol
-    .replace("USDT", "-USD")
-    .replace("USDC", "-USDC")
-    .replace("BTC", "BTC");
-}
-
-const CONFIG = {
-  symbol: process.env.SYMBOL || "BTCUSDT",
-  timeframe: process.env.TIMEFRAME || "4H",
-  portfolioValue: parseFloat(process.env.PORTFOLIO_VALUE_USD || "1000"),
-  maxTradeSizeUSD: parseFloat(process.env.MAX_TRADE_SIZE_USD || "100"),
-  maxTradesPerDay: parseInt(process.env.MAX_TRADES_PER_DAY || "3"),
-  paperTrading: process.env.PAPER_TRADING !== "false",
-  tradeMode: process.env.TRADE_MODE || "spot",
-  coinbase: {
-    apiKey: process.env.COINBASE_API_KEY,
-    privateKey: normalizePrivateKey(process.env.COINBASE_PRIVATE_KEY),
-    baseUrl: "https://api.coinbase.com",
-  },
-};
-
-const LOG_FILE = "safety-check-log.json";
 
 // ─── Logging ────────────────────────────────────────────────────────────────
 
